@@ -22,13 +22,16 @@ STATE_FILE = Path("last_updates.json")
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
 
+
 def get_updates():
     """Microsoft公式ページからWindows 11の更新情報を取得"""
 
     response = requests.get(
         SOURCE_URL,
         timeout=30,
-        headers={"User-Agent": "WindowsUpdateNotifier/1.0"}
+        headers={
+            "User-Agent": "Mozilla/5.0 WindowsUpdateNotifier/1.0"
+        }
     )
     response.raise_for_status()
 
@@ -39,28 +42,28 @@ def get_updates():
     # KB番号を含む更新履歴テーブルを取得
     for table in soup.find_all("table"):
 
-      rows = table.find_all("tr")
-      if not rows:
-          continue
+        rows = table.find_all("tr")
+        if not rows:
+            continue
 
-    # KB番号が含まれる行がないテーブルは対象外
-      if not any(
-          re.search(
-              r"\bKB\d{7,8}\b",
-              row.get_text(" ", strip=True),
-              re.IGNORECASE
-          )
-          for row in rows
-      ):
-        continue
+        # KB番号が含まれる行がないテーブルは対象外
+        if not any(
+            re.search(
+                r"\bKB\d{7,8}\b",
+                row.get_text(" ", strip=True),
+                re.IGNORECASE
+            )
+            for row in rows
+        ):
+            continue
 
-    heading = table.find_previous(["h2", "h3", "h4"])
+        heading = table.find_previous(["h2", "h3", "h4"])
         version = (
             heading.get_text(" ", strip=True)
             if heading else "Windows 11"
         )
 
-        for row in rows[1:]:
+        for row in rows:
             cells = row.find_all(["td", "th"])
             row_text = " | ".join(
                 cell.get_text(" ", strip=True)
@@ -101,9 +104,10 @@ def get_updates():
     if not updates:
         raise RuntimeError(
             "更新情報を取得できませんでした。"
-            "Microsoft公式ページの構造が変わった可能性があります。"
+            "Microsoft公式ページの構造を確認してください。"
         )
 
+    print(f"取得した更新情報：{len(updates)}件")
     return updates
 
 
