@@ -36,26 +36,25 @@ def get_updates():
 
     updates = {}
 
-    # KB番号が記載された更新履歴テーブルを取得
+    # KB番号を含む更新履歴テーブルを取得
     for table in soup.find_all("table"):
 
-        rows = table.find_all("tr")
-        if not rows:
-            continue
+      rows = table.find_all("tr")
+      if not rows:
+          continue
 
-        header_text = " ".join(
-            cell.get_text(" ", strip=True)
-            for cell in rows[0].find_all(["th", "td"])
-        )
+    # KB番号が含まれる行がないテーブルは対象外
+      if not any(
+          re.search(
+              r"\bKB\d{7,8}\b",
+              row.get_text(" ", strip=True),
+              re.IGNORECASE
+          )
+          for row in rows
+      ):
+        continue
 
-        # Windows 11の更新履歴テーブルだけを対象にする
-        if (
-            "サポート技術情報の記事" not in header_text
-            and "KB article" not in header_text
-        ):
-            continue
-
-        heading = table.find_previous(["h2", "h3", "h4"])
+    heading = table.find_previous(["h2", "h3", "h4"])
         version = (
             heading.get_text(" ", strip=True)
             if heading else "Windows 11"
