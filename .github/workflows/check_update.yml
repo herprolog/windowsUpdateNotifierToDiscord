@@ -40,10 +40,12 @@ jobs:
       - name: Check Windows Update
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
         run: |
           python check_update.py
 
-      # 更新情報をGitHubに保存
+      # 通知履歴をGitHubに保存
       - name: Save update history
         run: |
           git config user.name "github-actions[bot]"
